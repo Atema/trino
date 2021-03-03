@@ -401,7 +401,7 @@ public class TestMemSqlTypeMapping
     @Test
     public void testMemSqlCreatedParameterizedCharUnicode()
     {
-        DataTypeTest.create()
+        DataTypeTestToSqlDataTypeTestConverter.create()
                 .addRoundTrip(charDataType(1, CHARACTER_SET_UTF8), "\u653b")
                 .addRoundTrip(charDataType(5, CHARACTER_SET_UTF8), "\u653b\u6bbb")
                 .addRoundTrip(charDataType(5, CHARACTER_SET_UTF8), "\u653b\u6bbb\u6a5f\u52d5\u968a")
@@ -411,7 +411,7 @@ public class TestMemSqlTypeMapping
     @Test
     public void testTrinoCreatedParameterizedVarchar()
     {
-        DataTypeTest.create()
+        DataTypeTestToSqlDataTypeTestConverter.create()
                 .addRoundTrip(stringDataType("varchar(10)", createVarcharType(10)), "text_a")
                 .addRoundTrip(stringDataType("varchar(255)", createVarcharType(255)), "text_b")
                 .addRoundTrip(stringDataType("varchar(256)", createVarcharType(256)), "text_c")
