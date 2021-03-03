@@ -25,6 +25,7 @@ import io.trino.testing.datatype.CreateAsSelectDataSetup;
 import io.trino.testing.datatype.DataSetup;
 import io.trino.testing.datatype.DataType;
 import io.trino.testing.datatype.DataTypeTest;
+import io.trino.testing.datatype.SqlDataTypeTest;
 import io.trino.testing.sql.SqlExecutor;
 import io.trino.testing.sql.TestTable;
 import io.trino.testing.sql.TrinoSqlExecutor;
@@ -59,20 +60,17 @@ import static io.trino.spi.type.IntegerType.INTEGER;
 import static io.trino.spi.type.RealType.REAL;
 import static io.trino.spi.type.SmallintType.SMALLINT;
 import static io.trino.spi.type.TimeZoneKey.UTC_KEY;
+import static io.trino.spi.type.TinyintType.TINYINT;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
 import static io.trino.spi.type.VarcharType.createVarcharType;
-import static io.trino.testing.datatype.DataType.bigintDataType;
 import static io.trino.testing.datatype.DataType.charDataType;
 import static io.trino.testing.datatype.DataType.dataType;
 import static io.trino.testing.datatype.DataType.dateDataType;
 import static io.trino.testing.datatype.DataType.decimalDataType;
 import static io.trino.testing.datatype.DataType.doubleDataType;
 import static io.trino.testing.datatype.DataType.formatStringLiteral;
-import static io.trino.testing.datatype.DataType.integerDataType;
 import static io.trino.testing.datatype.DataType.realDataType;
-import static io.trino.testing.datatype.DataType.smallintDataType;
 import static io.trino.testing.datatype.DataType.stringDataType;
-import static io.trino.testing.datatype.DataType.tinyintDataType;
 import static io.trino.testing.datatype.DataType.varcharDataType;
 import static io.trino.type.JsonType.JSON;
 import static java.lang.String.format;
@@ -104,13 +102,13 @@ public class TestMemSqlTypeMapping
     @Test
     public void testBasicTypes()
     {
-        DataTypeTest.create()
-                .addRoundTrip(bigintDataType(), 123_456_789_012L)
-                .addRoundTrip(integerDataType(), 1_234_567_890)
-                .addRoundTrip(smallintDataType(), (short) 32_456)
-                .addRoundTrip(tinyintDataType(), (byte) 125)
-                .addRoundTrip(doubleDataType(), 123.45d)
-                .addRoundTrip(realDataType(), 123.45f)
+        SqlDataTypeTest.create()
+                .addRoundTrip("bigint", "123456789012", BIGINT, "123456789012")
+                .addRoundTrip("integer", "1234567890", INTEGER, "1234567890")
+                .addRoundTrip("smallint", "32456", SMALLINT, "SMALLINT '32456'")
+                .addRoundTrip("tinyint", "125", TINYINT, "TINYINT '125'")
+                .addRoundTrip("double", "123.45", DOUBLE, "DOUBLE '123.45'")
+                .addRoundTrip("real", "123.45", REAL, "REAL '123.45'")
                 .execute(getQueryRunner(), trinoCreateAsSelect("test_basic_types"));
     }
 
@@ -123,14 +121,12 @@ public class TestMemSqlTypeMapping
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_float"));
     }
 
-    private static DataTypeTest singlePrecisionFloatingPointTests(DataType<Float> floatType)
+    private static SqlDataTypeTest singlePrecisionFloatingPointTests(DataType<Float> floatType)
     {
         // we are not testing Nan/-Infinity/+Infinity as those are not supported by MemSQL
-        return DataTypeTest.create()
-                .addRoundTrip(floatType, 3.14f)
-                // TODO Overeagerly rounded by MemSQL to 3.14159
-                // .addRoundTrip(floatType, 3.1415927f)
-                .addRoundTrip(floatType, null);
+        return SqlDataTypeTest.create()
+                .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
+                .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)");
     }
 
     @Test
@@ -142,12 +138,12 @@ public class TestMemSqlTypeMapping
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_double"));
     }
 
-    private static DataTypeTest doublePrecisionFloatingPointTests(DataType<Double> doubleType)
+    private static SqlDataTypeTest doublePrecisionFloatingPointTests(DataType<Double> doubleType)
     {
         // we are not testing Nan/-Infinity/+Infinity as those are not supported by MemSQL
-        return DataTypeTest.create()
-                .addRoundTrip(doubleType, 1.0e100d)
-                .addRoundTrip(doubleType, null);
+        return SqlDataTypeTest.create()
+                .addRoundTrip("double", "1.0E100", DOUBLE, "DOUBLE '1.0E100'")
+                .addRoundTrip("double", "NULL", DOUBLE, "CAST(NULL AS double)");
     }
 
     @Test
