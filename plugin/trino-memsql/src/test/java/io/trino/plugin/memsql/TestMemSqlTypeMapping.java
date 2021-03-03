@@ -25,6 +25,7 @@ import io.trino.testing.datatype.CreateAsSelectDataSetup;
 import io.trino.testing.datatype.DataSetup;
 import io.trino.testing.datatype.DataType;
 import io.trino.testing.datatype.DataTypeTest;
+import io.trino.testing.datatype.SqlDataTypeTest;
 import io.trino.testing.sql.SqlExecutor;
 import io.trino.testing.sql.TestTable;
 import io.trino.testing.sql.TrinoSqlExecutor;
@@ -37,7 +38,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Objects;
 import java.util.function.Function;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -153,18 +153,12 @@ public class TestMemSqlTypeMapping
     @Test
     public void testUnsignedTypes()
     {
-        DataType<Short> memSqlUnsignedTinyInt = DataType.dataType("TINYINT UNSIGNED", SMALLINT, Objects::toString);
-        DataType<Integer> memSqlUnsignedSmallInt = DataType.dataType("SMALLINT UNSIGNED", INTEGER, Objects::toString);
-        DataType<Long> memSqlUnsignedInt = DataType.dataType("INT UNSIGNED", BIGINT, Objects::toString);
-        DataType<Long> memSqlUnsignedInteger = DataType.dataType("INTEGER UNSIGNED", BIGINT, Objects::toString);
-        DataType<BigDecimal> memSqlUnsignedBigint = DataType.dataType("BIGINT UNSIGNED", createDecimalType(20), Objects::toString);
-
-        DataTypeTest.create()
-                .addRoundTrip(memSqlUnsignedTinyInt, (short) 255)
-                .addRoundTrip(memSqlUnsignedSmallInt, 65_535)
-                .addRoundTrip(memSqlUnsignedInt, 4_294_967_295L)
-                .addRoundTrip(memSqlUnsignedInteger, 4_294_967_295L)
-                .addRoundTrip(memSqlUnsignedBigint, new BigDecimal("18446744073709551615"))
+        SqlDataTypeTest.create()
+                .addRoundTrip("tinyint unsigned", "255", SMALLINT, "SMALLINT '255'")
+                .addRoundTrip("smallint unsigned", "65535", INTEGER)
+                .addRoundTrip("int unsigned", "4294967295", BIGINT)
+                .addRoundTrip("integer unsigned", "4294967295", BIGINT)
+                .addRoundTrip("bigint unsigned", "18446744073709551615", createDecimalType(20, 0), "CAST('18446744073709551615' AS decimal(20, 0))")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_unsigned"));
     }
 
