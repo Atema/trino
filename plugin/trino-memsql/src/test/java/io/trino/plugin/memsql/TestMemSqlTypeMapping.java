@@ -51,6 +51,7 @@ import static io.trino.plugin.jdbc.UnsupportedTypeHandling.CONVERT_TO_VARCHAR;
 import static io.trino.plugin.memsql.MemSqlClient.MEMSQL_VARCHAR_MAX_LENGTH;
 import static io.trino.plugin.memsql.MemSqlQueryRunner.createMemSqlQueryRunner;
 import static io.trino.spi.type.BigintType.BIGINT;
+import static io.trino.spi.type.CharType.createCharType;
 import static io.trino.spi.type.DateType.DATE;
 import static io.trino.spi.type.DecimalType.createDecimalType;
 import static io.trino.spi.type.DoubleType.DOUBLE;
@@ -378,16 +379,14 @@ public class TestMemSqlTypeMapping
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_char"));
     }
 
-    private DataTypeTest memSqlCharTypeTest()
+    private SqlDataTypeTest memSqlCharTypeTest()
     {
-        return DataTypeTest.create()
-                .addRoundTrip(charDataType("char", 1), "")
-                .addRoundTrip(charDataType("char", 1), "a")
-                .addRoundTrip(charDataType(1), "")
-                .addRoundTrip(charDataType(1), "a")
-                .addRoundTrip(charDataType(8), "abc")
-                .addRoundTrip(charDataType(8), "12345678")
-                .addRoundTrip(charDataType(255), "a".repeat(255));
+        return SqlDataTypeTest.create()
+                .addRoundTrip("char(1)", "''", createCharType(1), "CAST('' AS char(1))")
+                .addRoundTrip("char(1)", "'a'", createCharType(1), "CAST('a' AS char(1))")
+                .addRoundTrip("char(8)", "'abc'", createCharType(8), "CAST('abc' AS char(8))")
+                .addRoundTrip("char(8)", "'12345678'", createCharType(8), "CAST('12345678' AS char(8))")
+                .addRoundTrip("char(255)", String.format("'%s'", "a".repeat(255)), createCharType(255), String.format("CAST('%s' AS char(255))", "a".repeat(255)));
     }
 
     @Test
