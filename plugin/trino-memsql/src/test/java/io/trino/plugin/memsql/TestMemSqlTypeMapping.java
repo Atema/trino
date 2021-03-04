@@ -431,32 +431,13 @@ public class TestMemSqlTypeMapping
     public void testMemSqlCreatedParameterizedVarchar()
     {
         SqlDataTypeTest.create().
-                .addRoundTrip(stringDataType("tinytext", createVarcharType(255)), "a")
-                .addRoundTrip(stringDataType("text", createVarcharType(65535)), "b")
-                .addRoundTrip(stringDataType("mediumtext", createVarcharType(16777215)), "c")
-                .addRoundTrip(stringDataType("longtext", createUnboundedVarcharType()), "d")
+                .addRoundTrip("varchar(255)","'tinytext'", createVarcharType(255),  "CAST('tinytext' AS varchar(255))")
+                .addRoundTrip("varchar(65535)","'text'", createVarcharType(65535),  "CAST('text' AS varchar(65535)")
+                .addRoundTrip("varchar(16777215)","'mediumtext'", createVarcharType(16777215), "CAST('tinytext' AS varchar(16777215)")
+                .addRoundTrip("varchar","'longtext'", createUnboundedVarcharType(),  "CAST('longtext' AS varchar")
+                //.addRoundTrip(varcharDataType(32), "a", "CAST('a' AS varchar(32))")
+                //.addRoundTrip(varcharDataType(15000), "b", "CAST('a' AS varchar(32))")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
-    }
-
-    @Test
-    public void testMemSqlCreatedParameterizedVarchar()
-    {
-        SqlDataTypeTest.create()
-                .addRoundTrip(varcharDataType(32), "a")
-                .addRoundTrip(varcharDataType(15000), "b")
-                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
-    }
-
-    @Test
-    public void testMemSqlCreatedParameterizedVarcharUnicode()
-    {
-        String sampleUnicodeText = "\u653b\u6bbb\u6a5f\u52d5\u968a";
-        SqlDataTypeTest.create()
-                .addRoundTrip(stringDataType("tinytext " + CHARACTER_SET_UTF8, createVarcharType(255)), sampleUnicodeText)
-                .addRoundTrip(stringDataType("text " + CHARACTER_SET_UTF8, createVarcharType(65535)), sampleUnicodeText)
-                .addRoundTrip(stringDataType("mediumtext " + CHARACTER_SET_UTF8, createVarcharType(16777215)), sampleUnicodeText)
-                .addRoundTrip(stringDataType("longtext " + CHARACTER_SET_UTF8, createUnboundedVarcharType()), sampleUnicodeText)
-                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar_unicode"));
     }
 
     @Test
@@ -473,6 +454,8 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip(varcharDataType(20000, CHARACTER_SET_UTF8), sampleUnicodeText)
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar_unicode"));
     }
+
+
 
     @Test
     public void testDate()
