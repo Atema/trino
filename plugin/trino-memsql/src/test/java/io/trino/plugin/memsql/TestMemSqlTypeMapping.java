@@ -428,41 +428,46 @@ public class TestMemSqlTypeMapping
     }
 
     @Test
-    public void testMemSqlCreatedParameterizedVarcharDataTypeString()
+    public void testMemSqlCreatedParameterizedVarchar()
     {
-        DataTypeTest.create()
+        SqlDataTypeTest.create().
                 .addRoundTrip(stringDataType("tinytext", createVarcharType(255)), "a")
                 .addRoundTrip(stringDataType("text", createVarcharType(65535)), "b")
                 .addRoundTrip(stringDataType("mediumtext", createVarcharType(16777215)), "c")
-                .addRoundTrip(stringDataType("longtext", createUnboundedVarcharType()), "e")
+                .addRoundTrip(stringDataType("longtext", createUnboundedVarcharType()), "d")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
     }
 
     @Test
-    public void testMemSqlCreatedParameterizedVarcharDataTypeVarchar()
+    public void testMemSqlCreatedParameterizedVarchar()
     {
-        DataTypeTest.create()
-                .addRoundTrip(varcharDataType(32), "b")
-                .addRoundTrip(varcharDataType(15000), "c")
+        SqlDataTypeTest.create()
+                .addRoundTrip(varcharDataType(32), "a")
+                .addRoundTrip(varcharDataType(15000), "b")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
     }
 
     @Test
-    public void testMemSqlCreatedParameterizedVarcharUnicodeDataTypeString()
+    public void testMemSqlCreatedParameterizedVarcharUnicode()
     {
         String sampleUnicodeText = "\u653b\u6bbb\u6a5f\u52d5\u968a";
-        DataTypeTest.create()
+        SqlDataTypeTest.create()
                 .addRoundTrip(stringDataType("tinytext " + CHARACTER_SET_UTF8, createVarcharType(255)), sampleUnicodeText)
                 .addRoundTrip(stringDataType("text " + CHARACTER_SET_UTF8, createVarcharType(65535)), sampleUnicodeText)
                 .addRoundTrip(stringDataType("mediumtext " + CHARACTER_SET_UTF8, createVarcharType(16777215)), sampleUnicodeText)
                 .addRoundTrip(stringDataType("longtext " + CHARACTER_SET_UTF8, createUnboundedVarcharType()), sampleUnicodeText)
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar_unicode"));
     }
-        @Test
-    public void testMemSqlCreatedParameterizedVarcharUnicodeDataTypeVarChar()
+
+    @Test
+    public void testMemSqlCreatedParameterizedVarcharUnicode()
     {
         String sampleUnicodeText = "\u653b\u6bbb\u6a5f\u52d5\u968a";
-        DataTypeTest.create()
+        SqlDataTypeTest.create()
+                .addRoundTrip(stringDataType("tinytext " + CHARACTER_SET_UTF8, createVarcharType(255)), sampleUnicodeText)
+                .addRoundTrip(stringDataType("text " + CHARACTER_SET_UTF8, createVarcharType(65535)), sampleUnicodeText)
+                .addRoundTrip(stringDataType("mediumtext " + CHARACTER_SET_UTF8, createVarcharType(16777215)), sampleUnicodeText)
+                .addRoundTrip(stringDataType("longtext " + CHARACTER_SET_UTF8, createUnboundedVarcharType()), sampleUnicodeText)
                 .addRoundTrip(varcharDataType(sampleUnicodeText.length(), CHARACTER_SET_UTF8), sampleUnicodeText)
                 .addRoundTrip(varcharDataType(32, CHARACTER_SET_UTF8), sampleUnicodeText)
                 .addRoundTrip(varcharDataType(20000, CHARACTER_SET_UTF8), sampleUnicodeText)
