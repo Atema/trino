@@ -17,7 +17,6 @@ import com.google.common.collect.ImmutableList;
 import io.trino.Session;
 import io.trino.plugin.jdbc.UnsupportedTypeHandling;
 import io.trino.spi.type.TimeZoneKey;
-import io.trino.spi.type.VarcharType;
 import io.trino.testing.AbstractTestQueryFramework;
 import io.trino.testing.QueryRunner;
 import io.trino.testing.datatype.CreateAndInsertDataSetup;
@@ -25,6 +24,7 @@ import io.trino.testing.datatype.CreateAsSelectDataSetup;
 import io.trino.testing.datatype.DataSetup;
 import io.trino.testing.datatype.DataType;
 import io.trino.testing.datatype.DataTypeTest;
+import io.trino.testing.datatype.SqlDataTypeTest;
 import io.trino.testing.sql.SqlExecutor;
 import io.trino.testing.sql.TestTable;
 import io.trino.testing.sql.TrinoSqlExecutor;
@@ -52,6 +52,7 @@ import static io.trino.plugin.jdbc.UnsupportedTypeHandling.CONVERT_TO_VARCHAR;
 import static io.trino.plugin.memsql.MemSqlClient.MEMSQL_VARCHAR_MAX_LENGTH;
 import static io.trino.plugin.memsql.MemSqlQueryRunner.createMemSqlQueryRunner;
 import static io.trino.spi.type.BigintType.BIGINT;
+import static io.trino.spi.type.CharType.createCharType;
 import static io.trino.spi.type.DateType.DATE;
 import static io.trino.spi.type.DecimalType.createDecimalType;
 import static io.trino.spi.type.DoubleType.DOUBLE;
@@ -79,8 +80,6 @@ import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
 import static java.math.RoundingMode.UNNECESSARY;
 import static java.util.Arrays.asList;
-import java.io.*; 
-
 
 public class TestMemSqlTypeMapping
         extends AbstractTestQueryFramework
@@ -404,31 +403,28 @@ public class TestMemSqlTypeMapping
     public void testMemSqlCreatedParameterizedCharUnicode()
     {
         SqlDataTypeTest.create()
-                .addRoundTrip("char(1) CHARACTER SET utf8", "'攻'", createCharType(1), "'攻'")
-                .addRoundTrip("char(5) CHARACTER SET utf8", "'攻殻'", createCharType(5), "CAST('攻殻' AS char(5))") 
-                .addRoundTrip("char(5) CHARACTER SET utf8", "'攻殻機動隊'", createCharType(5), "'攻殻機動隊'")
+                .addRoundTrip("char(1)", "'攻'", createCharType(1), "CAST('攻' AS char(1))")
+                .addRoundTrip("char(5)", "'攻殻'", createCharType(5), "CAST('攻殻' AS char(5))")
+                .addRoundTrip("char(5)", "'攻殻機動隊'", createCharType(5), "CAST('攻殻機動隊' AS char(5))")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
-      
     }
 
     @Test
     public void testTrinoCreatedParameterizedVarchar()
     {
         SqlDataTypeTest.create()
-        .addRoundTrip("varchar(10)", "'text_a'", createVarcharType(10), "'text_a'")
-        .addRoundTrip("varchar(255)", "'text_b'", createVarcharType(255), "'text_b'")
-        .addRoundTrip("varchar(256)", "'text_c'", createVarcharType(256), "'text_c'")
-        .addRoundTrip("varchar(21844)", "'text_memsql_max'", createVarcharType(21844), "'text_memsql_max'")
-        .addRoundTrip("varchar(21845)", "'text_memsql_larger_than_max'", createVarcharType(65535), "'text_memsql_larger_than_max'")
-        .addRoundTrip("varchar(65535)", "'text_d'", createVarcharType(65535), "'text_d'")
-        .addRoundTrip("varchar(65536)", "'text_e'", createVarcharType(16777215), "'text_e'")
-        .addRoundTrip("varchar(16777215)", "'text_f'", createVarcharType(16777215), "'text_f'")
-        .addRoundTrip("varchar(16777216)", "'text_g'", createUnboundedVarcharType(), "'text_g'")
-        .addRoundTrip("varchar(2147483646)", "'text_h'", createUnboundedVarcharType(), "'text_h'")
-        .addRoundTrip("varchar", "'unbounded'", createUnboundedVarcharType(), "'unbounded'")
+                .addRoundTrip("varchar(10)", "'text_a'", createVarcharType(10), "CAST('text_a' AS varchar(10))")
+                .addRoundTrip("varchar(255)", "'text_b'", createVarcharType(255), "CAST('text_b' AS varchar(255))")
+                .addRoundTrip("varchar(256)", "'text_c'", createVarcharType(256), "CAST('text_c' AS varchar(256))")
+                .addRoundTrip("varchar(" + MEMSQL_VARCHAR_MAX_LENGTH + ")", "'text_memsql_max'", createVarcharType(MEMSQL_VARCHAR_MAX_LENGTH), "CAST('text_memsql_max' AS varchar(" + MEMSQL_VARCHAR_MAX_LENGTH + "))")
+                .addRoundTrip("varchar(" + (MEMSQL_VARCHAR_MAX_LENGTH + 1) + ")", "'text_memsql_larger_than_max'", createVarcharType(65535), "CAST('text_memsql_larger_than_max' AS varchar(65535))")
+                .addRoundTrip("varchar(65535)", "'text_d'", createVarcharType(65535), "CAST('text_d' AS varchar(65535))")
+                .addRoundTrip("varchar(65536)", "'text_e'", createVarcharType(16777215), "CAST('text_e' AS varchar(65536))")
+                .addRoundTrip("varchar(16777215)", "'text_f'", createVarcharType(16777215), "CAST('text_f' AS varchar(16777215))")
+                .addRoundTrip("varchar(16777216)", "'text_g'", createUnboundedVarcharType(), "CAST('text_g' AS varchar(16777216))")
+                .addRoundTrip("varchar(2147483646)", "'text_h'", createUnboundedVarcharType(), "CAST('text_h' AS varchar(2147483646))")
+                .addRoundTrip("varchar", "'unbounded'", createUnboundedVarcharType(), "CAST('unbounded' AS varchar)")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_parameterized_varchar"));
-
-       
     }
 
     @Test
