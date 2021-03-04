@@ -67,9 +67,7 @@ import static io.trino.testing.datatype.DataType.charDataType;
 import static io.trino.testing.datatype.DataType.dataType;
 import static io.trino.testing.datatype.DataType.dateDataType;
 import static io.trino.testing.datatype.DataType.decimalDataType;
-import static io.trino.testing.datatype.DataType.doubleDataType;
 import static io.trino.testing.datatype.DataType.formatStringLiteral;
-import static io.trino.testing.datatype.DataType.realDataType;
 import static io.trino.testing.datatype.DataType.stringDataType;
 import static io.trino.testing.datatype.DataType.varcharDataType;
 import static io.trino.type.JsonType.JSON;
@@ -115,35 +113,35 @@ public class TestMemSqlTypeMapping
     @Test
     public void testFloat()
     {
-        singlePrecisionFloatingPointTests(realDataType())
-                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_float"));
-        singlePrecisionFloatingPointTests(memSqlFloatDataType())
-                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_float"));
-    }
-
-    private static SqlDataTypeTest singlePrecisionFloatingPointTests(DataType<Float> floatType)
-    {
         // we are not testing Nan/-Infinity/+Infinity as those are not supported by MemSQL
-        return SqlDataTypeTest.create()
+        SqlDataTypeTest.create()
                 .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
-                .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)");
+                // TODO Overeagerly rounded by MemSQL to 3.14159
+                // .addRoundTrip("real", "3.1415927", REAL, "REAL '3.14159'")
+                .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)")
+                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_float"));
+
+        SqlDataTypeTest.create()
+                .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
+                // TODO Overeagerly rounded by MemSQL to 3.14159
+                // .addRoundTrip("real", "3.1415927", REAL, "REAL '3.14159'")
+                .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)")
+                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_float"));
     }
 
     @Test
     public void testDouble()
     {
-        doublePrecisionFloatingPointTests(doubleDataType())
-                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_double"));
-        doublePrecisionFloatingPointTests(memSqlDoubleDataType())
-                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_double"));
-    }
-
-    private static SqlDataTypeTest doublePrecisionFloatingPointTests(DataType<Double> doubleType)
-    {
         // we are not testing Nan/-Infinity/+Infinity as those are not supported by MemSQL
-        return SqlDataTypeTest.create()
+        SqlDataTypeTest.create()
                 .addRoundTrip("double", "1.0E100", DOUBLE, "DOUBLE '1.0E100'")
-                .addRoundTrip("double", "NULL", DOUBLE, "CAST(NULL AS double)");
+                .addRoundTrip("double", "NULL", DOUBLE, "CAST(NULL AS double)")
+                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_double"));
+
+        SqlDataTypeTest.create()
+                .addRoundTrip("double precision", "1.0E100", DOUBLE, "DOUBLE '1.0E100'")
+                .addRoundTrip("double precision", "NULL", DOUBLE, "CAST(NULL AS double)")
+                .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_double"));
     }
 
     @Test
