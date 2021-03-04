@@ -25,6 +25,7 @@ import io.trino.testing.datatype.CreateAsSelectDataSetup;
 import io.trino.testing.datatype.DataSetup;
 import io.trino.testing.datatype.DataType;
 import io.trino.testing.datatype.DataTypeTest;
+import io.trino.testing.datatype.SqlDataTypeTest;
 import io.trino.testing.sql.SqlExecutor;
 import io.trino.testing.sql.TestTable;
 import io.trino.testing.sql.TrinoSqlExecutor;
@@ -37,6 +38,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -478,7 +480,7 @@ public class TestMemSqlTypeMapping
         }
     }
 
-    private DataTypeTest dateTestCases(DataType<LocalDate> dateDataType, ZoneId jvmZone, ZoneId someZone)
+    private SqlDataTypeTest dateTestCases(DataType<LocalDate> dateDataType, ZoneId jvmZone, ZoneId someZone)
     {
         LocalDate dateOfLocalTimeChangeForwardAtMidnightInJvmZone = LocalDate.of(1970, 1, 1);
         verify(jvmZone.getRules().getValidOffsets(dateOfLocalTimeChangeForwardAtMidnightInJvmZone.atStartOfDay()).isEmpty());
@@ -488,15 +490,15 @@ public class TestMemSqlTypeMapping
         LocalDate dateOfLocalTimeChangeBackwardAtMidnightInSomeZone = LocalDate.of(1983, 10, 1);
         verify(someZone.getRules().getValidOffsets(dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.atStartOfDay().minusMinutes(1)).size() == 2);
 
-        return DataTypeTest.create()
-                .addRoundTrip(dateDataType, LocalDate.of(1952, 4, 3)) // before epoch
-                .addRoundTrip(dateDataType, LocalDate.of(1970, 1, 1))
-                .addRoundTrip(dateDataType, LocalDate.of(1970, 2, 3))
-                .addRoundTrip(dateDataType, LocalDate.of(2017, 7, 1)) // summer on northern hemisphere (possible DST)
-                .addRoundTrip(dateDataType, LocalDate.of(2017, 1, 1)) // winter on northern hemisphere (possible DST on southern hemisphere)
-                .addRoundTrip(dateDataType, dateOfLocalTimeChangeForwardAtMidnightInJvmZone)
-                .addRoundTrip(dateDataType, dateOfLocalTimeChangeForwardAtMidnightInSomeZone)
-                .addRoundTrip(dateDataType, dateOfLocalTimeChangeBackwardAtMidnightInSomeZone);
+        return SqlDataTypeTest.create()
+                .addRoundTrip("date", "'DATE '''1952-04-03''", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // before epoch
+                .addRoundTrip("date", "'DATE '''1970-01-01''", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "'DATE '''1970-02-03''", DATE, LocalDate.of(1970, 2, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "'DATE '''2017-07-01''", DATE, LocalDate.of(2017, 7, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // summer on northern hemisphere (possible DST)
+                .addRoundTrip("date", "'DATE '''2017-01-01''", DATE, LocalDate.of(2017, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // winter on northern hemisphere (possible DST on southern hemisphere)
+                .addRoundTrip("date", "'DATE '''1970-01-01''", DATE, dateOfLocalTimeChangeForwardAtMidnightInJvmZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "'DATE '''1983-04-01''", DATE, dateOfLocalTimeChangeForwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "'DATE '''1983-10-01''", DATE, dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")));
     }
 
     @Test
@@ -523,19 +525,19 @@ public class TestMemSqlTypeMapping
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
     }
 
-    private DataTypeTest jsonTestCases(DataType<String> jsonDataType)
+    private SqlDataTypeTest jsonTestCases(DataType<String> jsonDataType)
     {
-        return DataTypeTest.create()
-                .addRoundTrip(jsonDataType, "{}")
-                .addRoundTrip(jsonDataType, null)
-                .addRoundTrip(jsonDataType, "null")
-                .addRoundTrip(jsonDataType, "123.4")
-                .addRoundTrip(jsonDataType, "\"abc\"")
-                .addRoundTrip(jsonDataType, "\"text with ' apostrophes\"")
-                .addRoundTrip(jsonDataType, "\"\"")
-                .addRoundTrip(jsonDataType, "{\"a\":1,\"b\":2}")
-                .addRoundTrip(jsonDataType, "{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}")
-                .addRoundTrip(jsonDataType, "[]");
+        return SqlDataTypeTest.create()
+                .addRoundTrip("json", "JSON " + formatStringLiteral("{}"), JSON, "JSON {}")
+                .addRoundTrip("json", "JSON " + formatStringLiteral(null), JSON, null)
+                .addRoundTrip("json", "JSON " + formatStringLiteral("null"), JSON, "JSON null")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("123.4"), JSON, "JSON 123.4")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("\"abc\""), JSON, "JSON \"abc\"")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("\"text with ' apostrophes\""), JSON, "JSON \"text with ' apostrophes\"")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("\"\""), JSON, "JSON \"\"")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("{\"a\":1,\"b\":2}"), JSON, "JSON {\"a\":1,\"b\":2}")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}"), JSON, "JSON {\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}")
+                .addRoundTrip("json", "JSON " + formatStringLiteral("[]"), JSON, "JSON []");
     }
 
     private void testUnsupportedDataType(String databaseDataType)
