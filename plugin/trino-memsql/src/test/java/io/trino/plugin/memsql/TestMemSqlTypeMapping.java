@@ -431,10 +431,10 @@ public class TestMemSqlTypeMapping
     public void testMemSqlCreatedParameterizedVarchar()
     {
         SqlDataTypeTest.create().
-                .addRoundTrip("varchar(255)","'tinytext'", createVarcharType(255),  "CAST('tinytext' AS varchar(255))")
-                .addRoundTrip("varchar(65535)","'text'", createVarcharType(65535),  "CAST('text' AS varchar(65535)")
-                .addRoundTrip("varchar(16777215)","'mediumtext'", createVarcharType(16777215), "CAST('tinytext' AS varchar(16777215)")
-                .addRoundTrip("varchar","'longtext'", createUnboundedVarcharType(),  "CAST('longtext' AS varchar")
+                .addRoundTrip("tinytext", "'a'", createVarcharType(255), "CAST('a' AS varchar(255))")
+                .addRoundTrip("text","'b'", createVarcharType(65535),  "CAST('b' AS varchar(65535)")
+                .addRoundTrip("mediumtext","'c'", createVarcharType(16777215), "CAST('c' AS varchar(16777215)")
+                .addRoundTrip("longtext","'d'", createUnboundedVarcharType(),  "CAST('d' AS longtext")
                 //.addRoundTrip(varcharDataType(32), "a", "CAST('a' AS varchar(32))")
                 //.addRoundTrip(varcharDataType(15000), "b", "CAST('a' AS varchar(32))")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
