@@ -25,6 +25,7 @@ import io.trino.testing.datatype.CreateAsSelectDataSetup;
 import io.trino.testing.datatype.DataSetup;
 import io.trino.testing.datatype.DataType;
 import io.trino.testing.datatype.DataTypeTest;
+import io.trino.testing.datatype.SqlDataTypeTest;
 import io.trino.testing.sql.SqlExecutor;
 import io.trino.testing.sql.TestTable;
 import io.trino.testing.sql.TrinoSqlExecutor;
@@ -430,13 +431,13 @@ public class TestMemSqlTypeMapping
     @Test
     public void testMemSqlCreatedParameterizedVarchar()
     {
-        SqlDataTypeTest.create().
+        SqlDataTypeTest.create()
                 .addRoundTrip("tinytext", "'a'", createVarcharType(255), "CAST('a' AS varchar(255))")
-                .addRoundTrip("text","'b'", createVarcharType(65535), "CAST('b' AS varchar(65535)")
-                .addRoundTrip("mediumtext","'c'", createVarcharType(16777215), "CAST('c' AS varchar(16777215)")
-                .addRoundTrip("longtext","'d'", createUnboundedVarcharType(), "CAST('d' AS longtext")
-                .addRoundTrip("varchar(32)","'e'", createVarcharType(32), "CAST('e' AS varchar(32))")
-                .addRoundTrip("varchar(15000)","'f'",createVarcharType(15000), "CAST('f' AS varchar(15000))")
+                .addRoundTrip("text", "'b'", createVarcharType(65535), "CAST('b' AS varchar(65535))")
+                .addRoundTrip("mediumtext", "'c'", createVarcharType(16777215), "CAST('c' AS varchar(16777215))")
+                .addRoundTrip("longtext", "'unbounded'", createUnboundedVarcharType(), "CAST('unbounded' AS varchar)")
+                .addRoundTrip("varchar(32)", "'e'", createVarcharType(32), "CAST('e' AS varchar(32))")
+                .addRoundTrip("varchar(15000)", "'f'", createVarcharType(15000), "CAST('f' AS varchar(15000))")
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_parameterized_varchar"));
     }
 
@@ -444,7 +445,7 @@ public class TestMemSqlTypeMapping
     public void testMemSqlCreatedParameterizedVarcharUnicode()
     {
         String sampleUnicodeText = "\u653b\u6bbb\u6a5f\u52d5\u968a";
-        SqlDataTypeTest.create()
+        DataTypeTest.create()
                 .addRoundTrip(stringDataType("tinytext " + CHARACTER_SET_UTF8, createVarcharType(255)), sampleUnicodeText)
                 .addRoundTrip(stringDataType("text " + CHARACTER_SET_UTF8, createVarcharType(65535)), sampleUnicodeText)
                 .addRoundTrip(stringDataType("mediumtext " + CHARACTER_SET_UTF8, createVarcharType(16777215)), sampleUnicodeText)
