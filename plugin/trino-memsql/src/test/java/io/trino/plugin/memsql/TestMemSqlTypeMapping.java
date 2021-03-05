@@ -491,7 +491,6 @@ public class TestMemSqlTypeMapping
         verify(someZone.getRules().getValidOffsets(dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.atStartOfDay().minusMinutes(1)).size() == 2);
 
         return SqlDataTypeTest.create()
-                //.addRoundTrip(dateDataType, LocalDate.of(1952, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
                 .addRoundTrip("date", "CAST('1970-04-03' AS date)", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))//"DATE", "'1952-04-03'", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // before epoch
                 .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
                 .addRoundTrip("date", "CAST('1970-02-03' AS date)", DATE, LocalDate.of(1970, 2, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
@@ -520,16 +519,16 @@ public class TestMemSqlTypeMapping
     public void testJson()
     {
         SqlDataTypeTest.create()
-                .addRoundTrip("json", "'{}'", JSON, "'{}'")
-                //.addRoundTrip("json", "NULL", JSON, "CAST(NULL AS json)")
-                .addRoundTrip("json", "'null'", JSON, "'null'")
-                .addRoundTrip("json", "'123.4'", JSON, "'123.4'")
-                .addRoundTrip("json", "'\"abc\"'", JSON, "'\"abc\"'")
-                .addRoundTrip("json", "'\"text with ' apostrophes\"'", JSON, "'\"text with ' apostrophes\"'")
-                .addRoundTrip("json", "'\"\"'", JSON, "'\"\"'")
-                .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "'{\"a\":1,\"b\":2}'")
-                .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
-                .addRoundTrip("json", "'[]'", JSON, "'[]'")
+                .addRoundTrip("json", "'{}'", JSON, "JSON '{}'")
+                //.addRoundTrip("json", "NULL", JSON, "JSON NULL")
+                .addRoundTrip("json", "'null'", JSON, "JSON 'null'")
+                .addRoundTrip("json", "'123.4'", JSON, "JSON '123.4'")
+                .addRoundTrip("json", "'\"abc\"'", JSON, "JSON '\"abc\"'")
+                //.addRoundTrip("json", "'\"text with ' apostrophes\"'", JSON, "JSON '\"text with ' apostrophes\"'")
+                .addRoundTrip("json", "'\"\"'", JSON, "JSON '\"\"'")
+                .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "JSON '{\"a\":1,\"b\":2}'")
+                .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
+                .addRoundTrip("json", "'[]'", JSON, "JSON '[]'")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"))
                 // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
