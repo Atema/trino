@@ -417,12 +417,13 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("varchar(255)", "'text_b'", createVarcharType(255), "CAST('text_b' AS varchar(255))")
                 .addRoundTrip("varchar(256)", "'text_c'", createVarcharType(256), "CAST('text_c' AS varchar(256))")
                 .addRoundTrip("varchar(" + MEMSQL_VARCHAR_MAX_LENGTH + ")", "'text_memsql_max'", createVarcharType(MEMSQL_VARCHAR_MAX_LENGTH), "CAST('text_memsql_max' AS varchar(" + MEMSQL_VARCHAR_MAX_LENGTH + "))")
+                // types larger than max VARCHAR(n) for MemSQL get mapped to one of TEXT/MEDIUMTEXT/LONGTEXT
                 .addRoundTrip("varchar(" + (MEMSQL_VARCHAR_MAX_LENGTH + 1) + ")", "'text_memsql_larger_than_max'", createVarcharType(65535), "CAST('text_memsql_larger_than_max' AS varchar(65535))")
                 .addRoundTrip("varchar(65535)", "'text_d'", createVarcharType(65535), "CAST('text_d' AS varchar(65535))")
-                .addRoundTrip("varchar(65536)", "'text_e'", createVarcharType(16777215), "CAST('text_e' AS varchar(65536))")
+                .addRoundTrip("varchar(65536)", "'text_e'", createVarcharType(16777215), "CAST('text_e' AS varchar(16777215))")
                 .addRoundTrip("varchar(16777215)", "'text_f'", createVarcharType(16777215), "CAST('text_f' AS varchar(16777215))")
-                .addRoundTrip("varchar(16777216)", "'text_g'", createUnboundedVarcharType(), "CAST('text_g' AS varchar(16777216))")
-                .addRoundTrip("varchar(2147483646)", "'text_h'", createUnboundedVarcharType(), "CAST('text_h' AS varchar(2147483646))")
+                .addRoundTrip("varchar(16777216)", "'text_g'", createUnboundedVarcharType(), "CAST('text_g' AS varchar)")
+                .addRoundTrip("varchar(2147483646)", "'text_h'", createUnboundedVarcharType(), "CAST('text_h' AS varchar)")
                 .addRoundTrip("varchar", "'unbounded'", createUnboundedVarcharType(), "CAST('unbounded' AS varchar)")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_parameterized_varchar"));
     }
