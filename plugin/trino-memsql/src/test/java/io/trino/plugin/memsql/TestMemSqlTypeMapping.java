@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import io.trino.Session;
 import io.trino.plugin.jdbc.UnsupportedTypeHandling;
 import io.trino.spi.type.TimeZoneKey;
+import io.trino.spi.type.VarcharType;
 import io.trino.testing.AbstractTestQueryFramework;
 import io.trino.testing.QueryRunner;
 import io.trino.testing.datatype.CreateAndInsertDataSetup;
@@ -423,7 +424,7 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("varchar(65536)", "'text_e'", createVarcharType(16777215), "CAST('text_e' AS varchar(16777215))")
                 .addRoundTrip("varchar(16777215)", "'text_f'", createVarcharType(16777215), "CAST('text_f' AS varchar(16777215))")
                 .addRoundTrip("varchar(16777216)", "'text_g'", createUnboundedVarcharType(), "CAST('text_g' AS varchar)")
-                .addRoundTrip("varchar(2147483646)", "'text_h'", createUnboundedVarcharType(), "CAST('text_h' AS varchar)")
+                .addRoundTrip("varchar(" + VarcharType.MAX_LENGTH + ")", "'text_h'", createUnboundedVarcharType(), "CAST('text_h' AS varchar)")
                 .addRoundTrip("varchar", "'unbounded'", createUnboundedVarcharType(), "CAST('unbounded' AS varchar)")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_parameterized_varchar"));
     }
