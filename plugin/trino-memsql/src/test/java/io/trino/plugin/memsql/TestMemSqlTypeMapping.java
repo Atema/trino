@@ -491,14 +491,15 @@ public class TestMemSqlTypeMapping
         verify(someZone.getRules().getValidOffsets(dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.atStartOfDay().minusMinutes(1)).size() == 2);
 
         return SqlDataTypeTest.create()
-                .addRoundTrip("date", "'DATE '''1952-04-03''", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // before epoch
-                .addRoundTrip("date", "'DATE '''1970-01-01''", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "'DATE '''1970-02-03''", DATE, LocalDate.of(1970, 2, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "'DATE '''2017-07-01''", DATE, LocalDate.of(2017, 7, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // summer on northern hemisphere (possible DST)
-                .addRoundTrip("date", "'DATE '''2017-01-01''", DATE, LocalDate.of(2017, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // winter on northern hemisphere (possible DST on southern hemisphere)
-                .addRoundTrip("date", "'DATE '''1970-01-01''", DATE, dateOfLocalTimeChangeForwardAtMidnightInJvmZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "'DATE '''1983-04-01''", DATE, dateOfLocalTimeChangeForwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "'DATE '''1983-10-01''", DATE, dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")));
+                //.addRoundTrip(dateDataType, LocalDate.of(1952, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "CAST('1970-04-03' AS date)", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))//"DATE", "'1952-04-03'", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // before epoch
+                .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "CAST('1970-02-03' AS date)", DATE, LocalDate.of(1970, 2, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "CAST('2017-07-01' AS date)", DATE, LocalDate.of(2017, 7, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // summer on northern hemisphere (possible DST)
+                .addRoundTrip("date", "CAST('2017-01-01' AS date)", DATE, LocalDate.of(2017, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // winter on northern hemisphere (possible DST on southern hemisphere)
+                .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, dateOfLocalTimeChangeForwardAtMidnightInJvmZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "CAST('1983-04-01' AS date)", DATE, dateOfLocalTimeChangeForwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
+                .addRoundTrip("date", "CAST('1983-10-01' AS date)", DATE, dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")));
     }
 
     @Test
@@ -518,26 +519,20 @@ public class TestMemSqlTypeMapping
     @Test
     public void testJson()
     {
-        jsonTestCases(memSqlJsonDataType(value -> "JSON " + formatStringLiteral(value)))
-                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"));
-        // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
-        jsonTestCases(memSqlJsonDataType(value -> format("%s", formatStringLiteral(value))))
+        SqlDataTypeTest.create()
+                .addRoundTrip("json", "'{}'", JSON, "'{}'")
+                //.addRoundTrip("json", "NULL", JSON, "CAST(NULL AS json)")
+                .addRoundTrip("json", "'null'", JSON, "'null'")
+                .addRoundTrip("json", "'123.4'", JSON, "'123.4'")
+                .addRoundTrip("json", "'\"abc\"'", JSON, "'\"abc\"'")
+                .addRoundTrip("json", "'\"text with ' apostrophes\"'", JSON, "'\"text with ' apostrophes\"'")
+                .addRoundTrip("json", "'\"\"'", JSON, "'\"\"'")
+                .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "'{\"a\":1,\"b\":2}'")
+                .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
+                .addRoundTrip("json", "'[]'", JSON, "'[]'")
+                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"))
+                // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
-    }
-
-    private SqlDataTypeTest jsonTestCases(DataType<String> jsonDataType)
-    {
-        return SqlDataTypeTest.create()
-                .addRoundTrip("json", "JSON " + formatStringLiteral("{}"), JSON, "JSON {}")
-                .addRoundTrip("json", "JSON " + formatStringLiteral(null), JSON, null)
-                .addRoundTrip("json", "JSON " + formatStringLiteral("null"), JSON, "JSON null")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("123.4"), JSON, "JSON 123.4")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("\"abc\""), JSON, "JSON \"abc\"")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("\"text with ' apostrophes\""), JSON, "JSON \"text with ' apostrophes\"")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("\"\""), JSON, "JSON \"\"")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("{\"a\":1,\"b\":2}"), JSON, "JSON {\"a\":1,\"b\":2}")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}"), JSON, "JSON {\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}")
-                .addRoundTrip("json", "JSON " + formatStringLiteral("[]"), JSON, "JSON []");
     }
 
     private void testUnsupportedDataType(String databaseDataType)
