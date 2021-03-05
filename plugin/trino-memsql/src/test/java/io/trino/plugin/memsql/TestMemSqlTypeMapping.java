@@ -516,6 +516,23 @@ public class TestMemSqlTypeMapping
     }
 
     @Test
+    public void testJsonTrino()
+    {
+        SqlDataTypeTest.create()
+                .addRoundTrip("json", "CAST('{}' AS VARCHAR)", JSON, "JSON '{}'")
+                //.addRoundTrip("json", "NULL", JSON, "JSON NULL")
+                .addRoundTrip("json", "'null'", JSON, "JSON 'null'")
+                .addRoundTrip("json", "'123.4'", JSON, "JSON '123.4'")
+                .addRoundTrip("json", "'\"abc\"'", JSON, "JSON '\"abc\"'")
+                //.addRoundTrip("json", "'\"text with ' apostrophes\"'", JSON, "JSON '\"text with ' apostrophes\"'")
+                .addRoundTrip("json", "'\"\"'", JSON, "JSON '\"\"'")
+                .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "JSON '{\"a\":1,\"b\":2}'")
+                .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
+                .addRoundTrip("json", "'[]'", JSON, "JSON '[]'")
+                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"));
+    }
+
+    @Test
     public void testJson()
     {
         SqlDataTypeTest.create()
@@ -529,7 +546,6 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "JSON '{\"a\":1,\"b\":2}'")
                 .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
                 .addRoundTrip("json", "'[]'", JSON, "JSON '[]'")
-                .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"))
                 // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
     }
