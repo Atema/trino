@@ -510,6 +510,8 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("json", "json_parse('{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}')", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
                 .addRoundTrip("json", "json_parse('[]')", JSON, "JSON '[]'")
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"));
+
+        // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
         SqlDataTypeTest.create()
                 .addRoundTrip("json", "'{}'", JSON, "JSON '{}'")
                 .addRoundTrip("json", "null", JSON, "CAST(NULL AS json)")
@@ -521,7 +523,6 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "JSON '{\"a\":1,\"b\":2}'")
                 .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
                 .addRoundTrip("json", "'[]'", JSON, "JSON '[]'")
-                // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
     }
 
@@ -557,16 +558,6 @@ public class TestMemSqlTypeMapping
     private DataSetup memSqlCreateAndInsert(String tableNamePrefix)
     {
         return new CreateAndInsertDataSetup(memSqlServer::execute, tableNamePrefix);
-    }
-
-    private static DataType<LocalDate> memSqlDateDataType(Function<LocalDate, String> toLiteral)
-    {
-        return dataType("date", DATE, toLiteral);
-    }
-
-    private static DataType<String> memSqlJsonDataType(Function<String, String> toLiteral)
-    {
-        return dataType("json", JSON, toLiteral);
     }
 
     private static DataType<Float> memSqlFloatDataType()
