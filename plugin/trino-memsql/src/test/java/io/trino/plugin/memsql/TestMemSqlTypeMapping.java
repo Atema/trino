@@ -38,7 +38,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -66,10 +65,8 @@ import static io.trino.spi.type.VarcharType.createVarcharType;
 import static io.trino.testing.datatype.DataType.bigintDataType;
 import static io.trino.testing.datatype.DataType.charDataType;
 import static io.trino.testing.datatype.DataType.dataType;
-import static io.trino.testing.datatype.DataType.dateDataType;
 import static io.trino.testing.datatype.DataType.decimalDataType;
 import static io.trino.testing.datatype.DataType.doubleDataType;
-import static io.trino.testing.datatype.DataType.formatStringLiteral;
 import static io.trino.testing.datatype.DataType.integerDataType;
 import static io.trino.testing.datatype.DataType.realDataType;
 import static io.trino.testing.datatype.DataType.smallintDataType;
@@ -465,40 +462,35 @@ public class TestMemSqlTypeMapping
 
         ZoneId someZone = ZoneId.of("Europe/Vilnius");
 
-        for (String timeZoneId : ImmutableList.of(UTC_KEY.getId(), jvmZone.getId(), someZone.getId())) {
-            Session session = Session.builder(getSession())
-                    .setTimeZoneKey(TimeZoneKey.getTimeZoneKey(timeZoneId))
-                    .build();
-            dateTestCases(memSqlDateDataType(value -> formatStringLiteral(value.toString())), jvmZone, someZone)
-                    .execute(getQueryRunner(), session, memSqlCreateAndInsert("tpch.test_date"));
-            dateTestCases(dateDataType(), jvmZone, someZone)
-                    .execute(getQueryRunner(), session, trinoCreateAsSelect(session, "test_date"));
-            dateTestCases(dateDataType(), jvmZone, someZone)
-                    .execute(getQueryRunner(), session, trinoCreateAsSelect(getSession(), "test_date"));
-            dateTestCases(dateDataType(), jvmZone, someZone)
-                    .execute(getQueryRunner(), session, trinoCreateAndInsert(session, "test_date"));
-        }
-    }
-
-    private SqlDataTypeTest dateTestCases(DataType<LocalDate> dateDataType, ZoneId jvmZone, ZoneId someZone)
-    {
         LocalDate dateOfLocalTimeChangeForwardAtMidnightInJvmZone = LocalDate.of(1970, 1, 1);
         verify(jvmZone.getRules().getValidOffsets(dateOfLocalTimeChangeForwardAtMidnightInJvmZone.atStartOfDay()).isEmpty());
-
         LocalDate dateOfLocalTimeChangeForwardAtMidnightInSomeZone = LocalDate.of(1983, 4, 1);
         verify(someZone.getRules().getValidOffsets(dateOfLocalTimeChangeForwardAtMidnightInSomeZone.atStartOfDay()).isEmpty());
         LocalDate dateOfLocalTimeChangeBackwardAtMidnightInSomeZone = LocalDate.of(1983, 10, 1);
         verify(someZone.getRules().getValidOffsets(dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.atStartOfDay().minusMinutes(1)).size() == 2);
 
-        return SqlDataTypeTest.create()
-                .addRoundTrip("date", "CAST('1970-04-03' AS date)", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))//"DATE", "'1952-04-03'", DATE, LocalDate.of(1970, 4, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // before epoch
-                .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, LocalDate.of(1970, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "CAST('1970-02-03' AS date)", DATE, LocalDate.of(1970, 2, 3).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "CAST('2017-07-01' AS date)", DATE, LocalDate.of(2017, 7, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // summer on northern hemisphere (possible DST)
-                .addRoundTrip("date", "CAST('2017-01-01' AS date)", DATE, LocalDate.of(2017, 1, 1).format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''"))) // winter on northern hemisphere (possible DST on southern hemisphere)
-                .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, dateOfLocalTimeChangeForwardAtMidnightInJvmZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "CAST('1983-04-01' AS date)", DATE, dateOfLocalTimeChangeForwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")))
-                .addRoundTrip("date", "CAST('1983-10-01' AS date)", DATE, dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.format(DateTimeFormatter.ofPattern("'DATE '''uuuu-MM-dd''")));
+        for (String timeZoneId : ImmutableList.of(UTC_KEY.getId(), jvmZone.getId(), someZone.getId())) {
+            Session session = Session.builder(getSession())
+                    .setTimeZoneKey(TimeZoneKey.getTimeZoneKey(timeZoneId))
+                    .build();
+
+            SqlDataTypeTest.create()
+                    .addRoundTrip("date", "CAST('1952-04-03' AS date)", DATE, "DATE '1952-04-03'") // before epoch
+                    .addRoundTrip("date", "CAST('1970-01-01' AS date)", DATE, "DATE '1970-01-01'")
+                    .addRoundTrip("date", "CAST('1970-02-03' AS date)", DATE, "DATE '1970-02-03'")
+                    .addRoundTrip("date", "CAST('2017-07-01' AS date)", DATE, "DATE '2017-07-01'") // summer on northern hemisphere (possible DST)
+                    .addRoundTrip("date", "CAST('2017-01-01' AS date)", DATE, "DATE '2017-01-01'") // winter on northern hemisphere (possible DST on southern hemisphere)
+                    .addRoundTrip("date", "CAST('" + dateOfLocalTimeChangeForwardAtMidnightInJvmZone.toString() + "' AS date)",
+                            DATE, "DATE '" + dateOfLocalTimeChangeForwardAtMidnightInJvmZone.toString() + "'")
+                    .addRoundTrip("date", "CAST('" + dateOfLocalTimeChangeForwardAtMidnightInSomeZone.toString() + "' AS date)",
+                            DATE, "DATE '" + dateOfLocalTimeChangeForwardAtMidnightInSomeZone.toString() + "'")
+                    .addRoundTrip("date", "CAST('" + dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.toString() + "' AS date)",
+                            DATE, "DATE '" + dateOfLocalTimeChangeBackwardAtMidnightInSomeZone.toString() + "'")
+                    .execute(getQueryRunner(), session, memSqlCreateAndInsert("tpch.test_date"))
+                    .execute(getQueryRunner(), session, trinoCreateAsSelect(session, "test_date"))
+                    .execute(getQueryRunner(), session, trinoCreateAsSelect(getSession(), "test_date"))
+                    .execute(getQueryRunner(), session, trinoCreateAndInsert(session, "test_date"));
+        }
     }
 
     @Test
@@ -516,7 +508,7 @@ public class TestMemSqlTypeMapping
     }
 
     @Test
-    public void testJsonTrino()
+    public void testJson()
     {
         SqlDataTypeTest.create()
                 .addRoundTrip("json", "json_parse('{}')", JSON, "JSON '{}'")
@@ -529,13 +521,7 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("json", "json_parse('{\"a\":1,\"b\":2}')", JSON, "JSON '{\"a\":1,\"b\":2}'")
                 .addRoundTrip("json", "json_parse('{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}')", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
                 .addRoundTrip("json", "json_parse('[]')", JSON, "JSON '[]'")
-                // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_json"));
-    }
-
-    @Test
-    public void testJson()
-    {
         SqlDataTypeTest.create()
                 .addRoundTrip("json", "'{}'", JSON, "JSON '{}'")
                 .addRoundTrip("json", "null", JSON, "CAST(NULL AS json)")
@@ -547,6 +533,7 @@ public class TestMemSqlTypeMapping
                 .addRoundTrip("json", "'{\"a\":1,\"b\":2}'", JSON, "JSON '{\"a\":1,\"b\":2}'")
                 .addRoundTrip("json", "'{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
                 .addRoundTrip("json", "'[]'", JSON, "JSON '[]'")
+                // MemSQL doesn't support CAST to JSON but accepts string literals as JSON values
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.mysql_test_json"));
     }
 
