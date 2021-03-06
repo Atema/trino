@@ -524,7 +524,7 @@ public class TestMemSqlTypeMapping
                 //.addRoundTrip("json", "CAST(JSON 'null' AS VARCHAR)", JSON, 'null')
                 .addRoundTrip("json", "CAST('123.4' AS DOUBLE)", JSON, "JSON '123.4'")
                 .addRoundTrip("json", "CAST(JSON '\"abc\"' AS VARCHAR)", JSON, "JSON '\"abc\"'")
-                //.addRoundTrip("json", "CAST(JSON '\"text with \' apostrophes\"' AS VARCHAR)", JSON, "JSON '\"text with \' apostrophes\"'")
+                //.addRoundTrip("json", "CAST(JSON '\"text with \'  apostrophes\"' AS VARCHAR)", JSON, "JSON '\"text with \' apostrophes\"'")
                 .addRoundTrip("json", "CAST(JSON '\"\"' AS VARCHAR)", JSON, "JSON '\"\"'")
                 .addRoundTrip("json", "CAST(JSON '{\"a\":1,\"b\":2}' AS MAP(VARCHAR, INTEGER))", JSON, "JSON '{\"a\":1,\"b\":2}'")
                 .addRoundTrip("json", "CAST(JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}' AS MAP(VARCHAR, JSON))", JSON, "JSON '{\"a\":[1,2,3],\"b\":{\"aa\":11,\"bb\":[{\"a\":1,\"b\":2},{\"a\":0}]}}'")
