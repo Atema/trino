@@ -116,31 +116,35 @@ public class TestMemSqlTypeMapping
     public void testFloat()
     {
         // we are not testing Nan/-Infinity/+Infinity as those are not supported by MemSQL
-        // TODO: Changing to SqlDataTypeTest with Real does not work, assertion in SqlDataTypeTest.verifyPredicate() fails
-
-        // SqlDataTypeTest.create()
-        //         .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
-        //         // TODO Overeagerly rounded by MemSQL to 3.14159
-        //         // .addRoundTrip("real", "3.1415927", REAL, "REAL '3.14159'")
-        //         .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)")
         DataTypeTest.create()
                 .addRoundTrip(realDataType(), 3.14f)
                 // TODO Overeagerly rounded by MemSQL to 3.14159
-                // .addRoundTrip(floatType, 3.1415927f)
+                // .addRoundTrip(realDataType(), 3.1415927f)
                 .addRoundTrip(realDataType(), null)
                 .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_float"));
 
-        // SqlDataTypeTest.create()
-                // .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
-                // // TODO Overeagerly rounded by MemSQL to 3.14159
-                // // .addRoundTrip("real", "3.1415927", REAL, "REAL '3.14159'")
-                // .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)")
         DataTypeTest.create()
                 .addRoundTrip(memSqlFloatDataType(), 3.14f)
                 // TODO Overeagerly rounded by MemSQL to 3.14159
                 // .addRoundTrip(floatType, 3.1415927f)
                 .addRoundTrip(memSqlFloatDataType(), null)
                 .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_float"));
+
+        // TODO: Changing to SqlDataTypeTest with Real does not work: assertion in SqlDataTypeTest.verifyPredicate() fails
+
+        // SqlDataTypeTest.create()
+        //         .addRoundTrip("real", "3.14", REAL, "REAL '3.14'")
+        //         // TODO Overeagerly rounded by MemSQL to 3.14159
+        //         // .addRoundTrip("real", "3.1415927", REAL, "REAL '3.14159'")
+        //         .addRoundTrip("real", "NULL", REAL, "CAST(NULL AS real)")
+        //         .execute(getQueryRunner(), trinoCreateAsSelect("trino_test_float"));
+
+        // SqlDataTypeTest.create()
+        //         .addRoundTrip("float", "3.14", REAL, "REAL '3.14'")
+        //         // TODO Overeagerly rounded by MemSQL to 3.14159
+        //         // .addRoundTrip("float", "3.1415927", REAL, "REAL '3.14159'")
+        //         .addRoundTrip("float", "NULL", REAL, "CAST(NULL AS real)")
+        //         .execute(getQueryRunner(), memSqlCreateAndInsert("tpch.memsql_test_float"));
     }
 
     @Test
@@ -593,10 +597,5 @@ public class TestMemSqlTypeMapping
     private static DataType<Float> memSqlFloatDataType()
     {
         return dataType("float", REAL, Object::toString);
-    }
-
-    private static DataType<Double> memSqlDoubleDataType()
-    {
-        return dataType("double precision", DOUBLE, Object::toString);
     }
 }
